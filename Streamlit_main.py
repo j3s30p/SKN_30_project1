@@ -114,19 +114,33 @@ html, body, [class*="css"] {
 
 
 if "page" not in st.session_state:
-    st.session_state.page = "현황"
+    st.session_state.page = "🏠 EV Seoul 소개 (INFO)"
 
-st.sidebar.markdown("## ⚡ 서울 EV 현황 시스템")
-pages = ["현황", "충전소 맵", "FAQ"]
-selected_page = st.sidebar.selectbox("페이지 선택", pages, index=pages.index(st.session_state.page))
-if selected_page != st.session_state.page:
-    st.session_state.page = selected_page
-    st.rerun()
+with st.sidebar:
+    # 사이드바 상단 로고 및 타이틀
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 900; background: linear-gradient(90deg, #10b981 0%, #00e5ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            EV Seoul
+        </div>
+        <div style="color: #64748b; font-size: 12px; margin-top: 4px;">Navigation Menu</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    pages = ["🏠 EV Seoul 소개 (INFO)", "📊 현황 대시보드", "📍 충전소 맵", "💬 FAQ"]
+    
+    # 2. key="page"를 넣으면 st.session_state.page 와 자동으로 동기화됩니다.
+    # 복잡한 if문이나 st.rerun()이 전혀 필요 없습니다!
+    selected_page = st.selectbox(
+        "이동할 페이지를 선택하세요",
+        options=pages,
+        key="page"
+    )
 
 st.markdown("---")
 
 import sys
-sys.path.insert(0, "/home/claude/ev_app")
+sys.path.insert(0, "Users\playdata2\SK_AI_Camp_TeamProject1")
 from data.seoul_ev_data import get_ev_data, get_charging_station_data, get_load_faq_data
 
 @st.cache_data
@@ -142,18 +156,96 @@ def load_faq_data():
 
 df        = load_data()
 df_charge = load_charging()
-
-
 # ─────────────────────────────────────────────────────────────────────────────
-# PAGE 1 : 현황
+# PAGE 1 : INFO
 # ─────────────────────────────────────────────────────────────────────────────
-if st.session_state.page == "현황":
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAGE 1 : 홈 (NEW)
+# ═══════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAGE 1 : 홈 (NEW)
+# ═══════════════════════════════════════════════════════════════════════════════
+if selected_page == "🏠 EV Seoul 소개 (INFO)":
+    st.markdown('<div class="page-content">', unsafe_allow_html=True)
+    
+    # 히어로 섹션
+    st.markdown("""
+    <div style="text-align: center; padding: 60px 20px 80px 20px;">
+        <div style="display: inline-block; padding: 6px 16px; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 100px; color: #00e5ff; font-size: 13px; font-weight: 700; margin-bottom: 24px; letter-spacing: 1px;">
+            SMART MOBILITY CITY
+        </div>
+        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 4rem; font-weight: 900; margin-bottom: 20px; line-height: 1.2;">
+            미래를 향한 푸른 발걸음<br>
+            <span style="background: linear-gradient(90deg, #10b981 0%, #00e5ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">EV Seoul</span>과 함께
+        </h1>
+        <p style="font-size: 1.2rem; color: #94a3b8; font-weight: 400; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+            서울특별시의 전기차 보급 현황과 충전소 인프라를 한눈에 파악하세요.<br>
+            시민들을 위한 편리하고 스마트한 데이터 통합 플랫폼입니다.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 기능 카드 섹션 (3열)
+    c1, c2, c3 = st.columns(3)
+    
+    with c1:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <div class="feature-title">현황 대시보드</div>
+            <div class="feature-desc">
+                서울시 25개 자치구별 전기자동차 등록 대수 및 차종별 분포를 
+                다양한 필터와 지도 시각화를 통해 직관적으로 분석합니다.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c2:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-icon">📍</div>
+            <div class="feature-title">스마트 충전소 맵</div>
+            <div class="feature-desc">
+                현재 위치 주변이나 원하는 자치구의 충전소를 빠르게 찾을 수 있습니다.
+                급속, 완속 등 충전기 타입과 운영시간을 확인하세요.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c3:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-icon">💬</div>
+            <div class="feature-title">자주 묻는 질문 (FAQ)</div>
+            <div class="feature-desc">
+                전기차 보조금, 혜택, 충전기 이용 방법 등 
+                시민들이 가장 궁금해하는 핵심 정보들을 키워드로 쉽게 검색해 보세요.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # 하단 안내
+    st.markdown("""
+    <div style="text-align: center; margin-top: 80px; padding-top: 40px; border-top: 1px solid var(--border);">
+        <p style="color: #64748b; font-size: 14px;">
+            👈 왼쪽 <b>사이드바 메뉴</b>에서 원하시는 기능을 선택하여 시작하세요!
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE 2 : 현황
+# ─────────────────────────────────────────────────────────────────────────────
+elif st.session_state.page == "📊 현황 대시보드":
     import folium
     from folium import DivIcon
     from streamlit_folium import st_folium
 
     st.markdown('<div class="page-content">', unsafe_allow_html=True)
-    st.markdown("### ⚡ 서울특별시 전기차 등록 현황")
+    st.markdown("### 📊 EV Seoul 전기차 등록 현황")
 
     # 필터 (최상단)
     with st.expander("🔍 상세 필터 설정", expanded=True):
@@ -231,29 +323,32 @@ if st.session_state.page == "현황":
 
         st_folium(m, width=None, height=500, use_container_width=True)
 
+    ######    
+
     with table_col:
-        st.markdown('<div class="section-title">📊 자치구별 세부 현황</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">📊 자치구별 등록 현황 (막대 그래프)</div>', unsafe_allow_html=True)
 
-        pivot = filtered.groupby(["시군구명", "차량종류"])["등록대수"].sum().unstack(fill_value=0)
-        pivot["합계"] = pivot.sum(axis=1)
-        pivot = pivot.sort_values("합계", ascending=False)
-        col_order = [c for c in ["승용", "승합", "화물", "특수"] if c in pivot.columns] + ["합계"]
-        pivot = pivot[col_order]
-        pivot.index.name = "시군구명"
+        # 1. 데이터 가공: 시군구별 합계만 추출하여 내림차순 정렬
+        chart_data = filtered.groupby("시군구명")["등록대수"].sum().sort_values(ascending=False).reset_index()
 
-        styled = pivot.style.format("{:,.0f}").background_gradient(
-            subset=["합계"], cmap="Blues"
-        ).set_properties(**{"font-size": "13px", "background-color": "#ffffff"})
+        # 2. 막대 그래프 출력 (지역명 & 합계만 표시)
+        st.bar_chart(
+            chart_data, 
+            x="시군구명", 
+            y="등록대수", 
+            color="#2563eb", 
+            use_container_width=True,
+            height=480
+        )
 
-        st.dataframe(styled, use_container_width=True, height=500)
-
+        # 3. 하단 요약 정보
         st.markdown(f"""
         <div style="margin-top:12px;padding:14px 18px;background:#f8fafc;
                     border:1px solid #e2e8f0;border-radius:12px;font-size:13px;text-align:center;">
-            <span style="color:#64748b">표시 구역:</span> <b>{len(pivot)}개</b>
+            <span style="color:#64748b">표시 구역:</span> <b>{len(chart_data)}개</b>
             <span style="margin:0 10px;color:#cbd5e1;">|</span>
             <span style="color:#64748b">총 등록대수:</span>
-            <b style="color:#2563eb;font-size:15px;">{int(pivot['합계'].sum()):,}대</b>
+            <b style="color:#2563eb; font-size:15px;">{int(chart_data['등록대수'].sum()):,}대</b>
         </div>
         """, unsafe_allow_html=True)
 
@@ -281,16 +376,65 @@ if st.session_state.page == "현황":
     st.markdown('</div>', unsafe_allow_html=True)
 
 
+
+    # ── [추가] 년도별 추이 및 연료별 비중 섹션 ──────────────────────────────────
+    st.markdown("<br>", unsafe_allow_html=True)
+    trend_col, donut_col = st.columns([5, 4], gap="large")
+
+    with trend_col:
+        st.markdown('<div class="section-title">📈 년도별 전기차 증가 추이</div>', unsafe_allow_html=True)
+        
+        yearly_trend = pd.read_csv("data/ev_trend.csv")
+        
+       
+        st.line_chart(
+            yearly_trend,
+            x="기준년도",
+            y="등록대수",
+            color="#07f303", 
+            use_container_width=True,
+            height=350
+        )
+
+    with donut_col:
+        st.markdown('<div class="section-title">🍩 연료별 자동차 등록 비중</div>', unsafe_allow_html=True)
+        
+        
+        import plotly.express as px
+
+        
+        fuel_data = pd.read_csv("data/ev_fuel.csv") ###실제데이터 삽입
+
+        fig = px.pie(
+            fuel_data, 
+            values="수량", 
+            names="연료", 
+            hole=0.1,
+            color_discrete_sequence=px.colors.sequential.Greens # 색상 테마
+        )
+        
+        # 그래프 레이아웃 깔끔하게 조정
+        fig.update_layout(
+            margin=dict(l=20, r=20, t=20, b=20),
+            showlegend=True,
+            height=350,
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
-# PAGE 2 : 충전소 맵
+# PAGE 3 : 충전소 맵
 # ─────────────────────────────────────────────────────────────────────────────
-elif st.session_state.page == "충전소 맵":
+elif st.session_state.page == "📍 충전소 맵":
     import folium
     from folium.plugins import MarkerCluster
     from streamlit_folium import st_folium
 
     st.markdown('<div class="page-content">', unsafe_allow_html=True)
-    st.markdown("<h3 style='color:#1e293b;font-weight:800;margin-bottom:20px;'>⚡ 서울시 전기차 충전소 인프라 현황</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color:#1e293b;font-weight:800;margin-bottom:20px;'>📍 EV Seoul 충전소 인프라 현황</h3>", unsafe_allow_html=True)
 
     f1, f2, f3 = st.columns([3, 3, 2])
     with f1:
@@ -380,11 +524,11 @@ elif st.session_state.page == "충전소 맵":
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PAGE 3 : FAQ
+# PAGE 4 : FAQ
 # ─────────────────────────────────────────────────────────────────────────────
-elif st.session_state.page == "FAQ":
+elif st.session_state.page == "💬 FAQ":
     st.markdown('<div class="page-content">', unsafe_allow_html=True)
-    st.markdown("<h3 style='color:#1e293b;font-weight:800;margin-bottom:20px;'>💬 무엇을 도와드릴까요?</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color:#1e293b;font-weight:800;margin-bottom:20px;'>💬 EV Seoul 자주 묻는 질문(FAQ)</h3>", unsafe_allow_html=True)
 
     search_col, cat_col = st.columns([4, 2])
     with search_col:
@@ -403,7 +547,7 @@ elif st.session_state.page == "FAQ":
         with kw_cols[i]:
             if st.button(kw, key=f"kw_{i}", use_container_width=True):
                 search_query = kw
-    
+
     st.markdown("<br><hr style='border-color:#e2e8f0;'><br>", unsafe_allow_html=True)
     
     faqs = load_faq_data()
