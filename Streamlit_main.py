@@ -636,7 +636,7 @@ elif st.session_state.page == "💬 FAQ":
     with cat_col:
         category = st.radio("카테고리", ["전체", "전기차", "충전소"], horizontal=True, label_visibility="collapsed")
 
-    popular_keywords = top_rate(5)
+    popular_keywords = top_rate(6)
     st.markdown("<div style='font-size:13px;color:#64748b;margin-bottom:8px;font-weight:600;'>🔥 인기 검색어</div>", unsafe_allow_html=True)
     kw_cols = st.columns(len(popular_keywords))
     for i, kw in enumerate(popular_keywords):
