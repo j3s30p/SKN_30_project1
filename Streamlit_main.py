@@ -1,4 +1,3 @@
-
 import sys
 import streamlit as st
 import pandas as pd
@@ -611,6 +610,7 @@ elif st.session_state.page == "📍 충전소 맵":
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div class="section-title">상세 리스트</div>', unsafe_allow_html=True)
         display_df = filtered_c[["station_name", "district_name", "fast_charger", "slow_charger"]].reset_index(drop=True)
+        display_df.index = display_df.index + 1
         display_df.columns = ["장소명", "자치구", "급속", "완속"]
         st.dataframe(display_df.head(50), use_container_width=True, height=300)
         if len(filtered_c) > 50:
@@ -636,7 +636,7 @@ elif st.session_state.page == "💬 FAQ":
     with cat_col:
         category = st.radio("카테고리", ["전체", "전기차", "충전소"], horizontal=True, label_visibility="collapsed")
 
-    popular_keywords = top_rate(6)
+    popular_keywords = top_rate(5)
     st.markdown("<div style='font-size:13px;color:#64748b;margin-bottom:8px;font-weight:600;'>🔥 인기 검색어</div>", unsafe_allow_html=True)
     kw_cols = st.columns(len(popular_keywords))
     for i, kw in enumerate(popular_keywords):
