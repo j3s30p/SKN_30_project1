@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 st.set_page_config(
     page_title="서울특별시 전기자동차 현황",
@@ -140,8 +141,11 @@ with st.sidebar:
 st.markdown("---")
 
 import sys
-sys.path.insert(0, "Users\playdata2\SK_AI_Camp_TeamProject1")
-from data.seoul_ev_data import get_ev_data, get_charging_station_data, get_load_faq_data
+
+from data.seoul_ev_data import (
+    get_ev_data, get_charging_station_data, get_load_faq_data, 
+    get_ev_trend_data, get_ev_fuel_data  # 추가됨
+)
 
 @st.cache_data
 def load_data():
@@ -347,7 +351,7 @@ elif st.session_state.page == "📊 현황 대시보드":
         </div>
         """, unsafe_allow_html=True)
 
-    # [수정 2] KPI 카드 — 지도·표 아래
+   # [수정 2] KPI 카드 — 지도·표 아래
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown('<div class="section-title">📈 주요 지표</div>', unsafe_allow_html=True)
 
@@ -355,22 +359,19 @@ elif st.session_state.page == "📊 현황 대시보드":
     top_district = df.groupby("시군구명")["등록대수"].sum().idxmax()
     top_count    = df.groupby("시군구명")["등록대수"].sum().max()
     avg          = int(df.groupby("시군구명")["등록대수"].sum().mean())
-    승용_total   = df[df["차량종류"] == "승용"]["등록대수"].sum()
-    ratio        = int(승용_total / total * 100)
+    
+    # 데이터셋에 승용 데이터가 없으므로 가장 최신 년도 등록 비중으로 대체
+    latest_year_label = sorted(df["차량종류"].unique())[-1]
+    latest_year_total = df[df["차량종류"] == latest_year_label]["등록대수"].sum()
+    ratio = int((latest_year_total / total) * 100) if total > 0 else 0
 
     k1, k2, k3, k4 = st.columns(4)
-    with k1:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">전체 전기차 등록</div><div class="kpi-value">{total:,}</div><div class="kpi-sub">서울특별시 전체</div></div>', unsafe_allow_html=True)
-    with k2:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">최다 등록 자치구</div><div class="kpi-value">{top_district}</div><div class="kpi-sub">{top_count:,}대</div></div>', unsafe_allow_html=True)
-    with k3:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">자치구 평균</div><div class="kpi-value">{avg:,}</div><div class="kpi-sub">25개 자치구 기준</div></div>', unsafe_allow_html=True)
-    with k4:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">승용차 비율</div><div class="kpi-value">{ratio}%</div><div class="kpi-sub">{승용_total:,}대</div></div>', unsafe_allow_html=True)
+    with k1: st.markdown(f'<div class="kpi-card"><div class="kpi-label">전체 전기차 등록</div><div class="kpi-value">{total:,}</div><div class="kpi-sub">서울특별시 전체</div></div>', unsafe_allow_html=True)
+    with k2: st.markdown(f'<div class="kpi-card"><div class="kpi-label">최다 등록 자치구</div><div class="kpi-value">{top_district}</div><div class="kpi-sub">{top_count:,}대</div></div>', unsafe_allow_html=True)
+    with k3: st.markdown(f'<div class="kpi-card"><div class="kpi-label">자치구 평균</div><div class="kpi-value">{avg:,}</div><div class="kpi-sub">25개 자치구 기준</div></div>', unsafe_allow_html=True)
+    with k4: st.markdown(f'<div class="kpi-card"><div class="kpi-label">{latest_year_label} 비중</div><div class="kpi-value">{ratio}%</div><div class="kpi-sub">{latest_year_total:,}대 신규등록</div></div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
-
-
 
     # ── [추가] 년도별 추이 및 연료별 비중 섹션 ──────────────────────────────────
     st.markdown("<br>", unsafe_allow_html=True)
@@ -379,42 +380,27 @@ elif st.session_state.page == "📊 현황 대시보드":
     with trend_col:
         st.markdown('<div class="section-title">📈 년도별 전기차 증가 추이</div>', unsafe_allow_html=True)
         
-        yearly_trend = pd.read_csv("data/ev_trend.csv")
+        yearly_trend = get_ev_trend_data() # 함수 연동 (파일 직접 읽기 x)
         
-       
         st.line_chart(
             yearly_trend,
-            x="기준년도",
-            y="등록대수",
-            color="#07f303", 
-            use_container_width=True,
-            height=350
+            x="기준년도", y="등록대수", color="#07f303", 
+            use_container_width=True, height=350
         )
 
     with donut_col:
         st.markdown('<div class="section-title">🍩 연료별 자동차 등록 비중</div>', unsafe_allow_html=True)
         
-        
         import plotly.express as px
-
         
-        fuel_data = pd.read_csv("data/ev_fuel.csv") ###실제데이터 삽입
+        fuel_data = get_ev_fuel_data() # 함수 연동 (파일 직접 읽기 x)
 
         fig = px.pie(
             fuel_data, 
-            values="수량", 
-            names="연료", 
-            hole=0.1,
-            color_discrete_sequence=px.colors.sequential.Greens # 색상 테마
+            values="수량", names="연료", hole=0.1,
+            color_discrete_sequence=px.colors.sequential.Greens
         )
-        
-        # 그래프 레이아웃 깔끔하게 조정
-        fig.update_layout(
-            margin=dict(l=20, r=20, t=20, b=20),
-            showlegend=True,
-            height=350,
-        )
-        
+        fig.update_layout(margin=dict(l=20, r=20, t=20, b=20), showlegend=True, height=350)
         st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -513,7 +499,7 @@ elif st.session_state.page == "📍 충전소 맵":
         display_df.columns = ["장소명", "종류", "운영시간"]
         st.dataframe(display_df.head(50), use_container_width=True, height=300)
         if len(filtered_c) > 50:
-            st.caption(f"*상위 50개소 표시 (검색결과: 총 {len(filtered_c):,}개소)")
+            st.caption(f"*상위 50개소 표시 (검색결과: 총 {len(filtered_c):,}개)")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
