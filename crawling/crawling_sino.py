@@ -18,7 +18,7 @@ def crawling(faq_list):
 	questions = driver.find_elements(By.CSS_SELECTOR, "h2.wp-block-heading.has-medium-font-size")
 
 	for q in questions:
-		question = q.text.strip()
+		question = q.text.strip().split('. ')[1]
 		answer = q.find_element(By.XPATH, "following-sibling::p[1]").text.strip()	# 바로 아래 <p> 잡기
 		faq_list.append(Faq(question, answer))
 
