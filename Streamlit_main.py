@@ -216,17 +216,32 @@ if selected_page == "🏠 EV Seoul 소개 (INFO)":
     st.markdown('<div class="page-content">', unsafe_allow_html=True)
     
     # 2. 히어로 섹션
+    # 2. 히어로 섹션 (타이틀과 서브타이틀 완벽 분리 및 중앙 고정)
+    
+    # 2-1. 뱃지 및 메인 타이틀
     st.markdown("""
-    <div class="hero-container">
-        <div class="hero-badge">SMART MOBILITY CITY</div>
-        <h1 class="hero-title">미래를 향한 푸른 발걸음<br><span>EV Seoul</span>과 함께</h1>
-        <p class="hero-subtitle">
-            서울특별시의 전기차 보급 현황과 충전소 인프라를 한눈에 파악하세요.<br>
-            시민들을 위한 편리하고 스마트한 데이터 통합 플랫폼입니다.
-        </p>
+    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 60px; padding-bottom: 15px;">
+        <div style="padding: 6px 16px; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 100px; color: #00e5ff; font-size: 13px; font-weight: 700; margin-bottom: 24px; letter-spacing: 1px;">
+            SMART MOBILITY CITY
+        </div>
+        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 3.5rem; font-weight: 900; margin: 0; line-height: 1.2; color: var(--text); text-align: center;">
+            <span style="background: linear-gradient(90deg, #10b981 0%, #00e5ff 100%); -webkit-background-clip: text;
+                 -webkit-text-fill-color: transparent;">미래를 향한 푸른 발걸음<br>
+                EV Seoul과 함께</span>
+        </h1>
     </div>
     """, unsafe_allow_html=True)
 
+    # 2-2. 서브타이틀 (분리하여 강제 중앙 정렬 적용)
+    st.markdown("""
+    <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 40px;">
+        <div style="text-align: center; font-size: 1.15rem; color: #475569; font-weight: 500; line-height: 1.7; word-break: keep-all;">
+            서울특별시의 전기차 보급 현황과 충전소 인프라를 한눈에 파악하세요.<br>
+            시민들을 위한 편리하고 스마트한 데이터 통합 플랫폼입니다.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     # 3. [신규] 라이브 퀵 스탯 (데이터에서 실시간 추출)
     # 가장 최신 년도의 전기차 등록 대수 합계 구하기
     latest_year = sorted(df["기준년도"].unique())[-1]
@@ -247,7 +262,11 @@ if selected_page == "🏠 EV Seoul 소개 (INFO)":
     </div>
     """, unsafe_allow_html=True)
 
-    # 4. 기능 카드 섹션 (HTML 레이아웃 + Streamlit 버튼 결합)
+    # [추가] 페이지 이동을 위한 콜백 함수 정의
+    def change_page(page_name):
+        st.session_state.page = page_name
+
+    # 4. 기능 카드 섹션 (HTML 레이아웃 + 콜백이 적용된 Streamlit 버튼)
     c1, c2, c3 = st.columns(3)
     
     with c1:
@@ -260,10 +279,8 @@ if selected_page == "🏠 EV Seoul 소개 (INFO)":
             </div>
         </div>
         """, unsafe_allow_html=True)
-        # 버튼을 누르면 세션 스테이트의 page 값을 변경하고 새로고침하여 페이지 이동
-        if st.button("현황 분석하기 ➔", key="nav_dash", type="primary", use_container_width=True):
-            st.session_state.page = "📊 현황 대시보드"
-            st.rerun()
+        # on_click과 args를 사용하여 위젯 렌더링 전에 상태를 변경합니다 (에러 해결 핵심!)
+        st.button("현황 분석하기 ➔", key="nav_dash", type="primary", use_container_width=True, on_click=change_page, args=("📊 현황 대시보드",))
 
     with c2:
         st.markdown("""
@@ -275,9 +292,7 @@ if selected_page == "🏠 EV Seoul 소개 (INFO)":
             </div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("충전소 찾기 ➔", key="nav_map", type="primary", use_container_width=True):
-            st.session_state.page = "📍 충전소 맵"
-            st.rerun()
+        st.button("충전소 찾기 ➔", key="nav_map", type="primary", use_container_width=True, on_click=change_page, args=("📍 충전소 맵",))
 
     with c3:
         st.markdown("""
@@ -289,9 +304,7 @@ if selected_page == "🏠 EV Seoul 소개 (INFO)":
             </div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("FAQ 바로가기 ➔", key="nav_faq", type="primary", use_container_width=True):
-            st.session_state.page = "💬 FAQ"
-            st.rerun()
+        st.button("FAQ 바로가기 ➔", key="nav_faq", type="primary", use_container_width=True, on_click=change_page, args=("💬 FAQ",))
 
     # 5. [신규] 안내 섹션 (Why EV Seoul?)
     st.markdown("""
