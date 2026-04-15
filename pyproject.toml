@@ -1,0 +1,14 @@
+[project]
+name = "sk-ai-camp-teamproject1"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "data>=0.4",
+    "folium>=0.20.0",
+    "matplotlib>=3.10.8",
+    "plotly>=6.7.0",
+    "streamlit>=1.56.0",
+    "streamlit-folium>=0.27.1",
+]
