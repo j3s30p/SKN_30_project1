@@ -1,5 +1,13 @@
+
+import sys
 import streamlit as st
 import pandas as pd
+import plotly.express as px
+
+import folium
+from folium import DivIcon
+from folium.plugins import MarkerCluster
+from streamlit_folium import st_folium
 
 st.set_page_config(
     page_title="서울특별시 전기자동차 현황",
@@ -160,6 +168,7 @@ def load_faq_data():
 
 df        = load_data()
 df_charge = load_charging()
+district_df = pd.read_csv("data/data_set_seoul_districts.csv")
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE 1 : INFO
 # ─────────────────────────────────────────────────────────────────────────────
@@ -238,46 +247,49 @@ if selected_page == "🏠 EV Seoul 소개 (INFO)":
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE 2 : 현황
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE 2 : 현황 대시보드
+# ─────────────────────────────────────────────────────────────────────────────
 elif st.session_state.page == "📊 현황 대시보드":
     import folium
     from folium import DivIcon
     from streamlit_folium import st_folium
 
     st.markdown('<div class="page-content">', unsafe_allow_html=True)
-    st.markdown("### 📊 EV Seoul 전기차 등록 현황")
+    st.markdown("<h3 style='color:#1e293b;font-weight:800;margin-bottom:20px;'>📊 EV Seoul 전기차 등록 현황</h3>", unsafe_allow_html=True)
 
-    # 필터 (최상단)
+
+    # [수정됨] 필터 최상단: 다중선택이 아닌 단일 '년도' 선택으로 변경
     with st.expander("🔍 상세 필터 설정", expanded=True):
         f1, f2, f3 = st.columns([3, 3, 2])
         with f1:
             all_districts = ["전체"] + sorted(df["시군구명"].unique().tolist())
             selected_district = st.selectbox("시군구 선택", all_districts, key="dist_filter")
         with f2:
-            vehicle_options = df["차량종류"].unique().tolist()
-            selected_vehicles = st.multiselect("차량 종류", vehicle_options, default=vehicle_options, key="vtype_filter")
+            # 년도 내림차순 정렬 (가장 최신 년도가 기본값)
+            year_options = sorted(df["기준년도"].unique().tolist(), reverse=True)
+            selected_year = st.selectbox("기준년도 선택", year_options, index=0, key="year_filter")
         with f3:
-            st.metric("선택된 차량종류", f"{len(selected_vehicles)}종")
+            # 선택된 년도의 서울시 전체 등록대수 미리보기
+            year_total = df[df["기준년도"] == selected_year]["등록대수"].sum()
+            st.metric(f"{selected_year} 전기차 총 등록대수", f"{int(year_total):,}대")
 
-    filtered = df.copy()
+    # 필터 적용 (선택된 하나의 '년도' 데이터만 남김)
+    filtered = df[df["기준년도"] == selected_year].copy()
     if selected_district != "전체":
         filtered = filtered[filtered["시군구명"] == selected_district]
-    if selected_vehicles:
-        filtered = filtered[filtered["차량종류"].isin(selected_vehicles)]
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # [수정 2] 지도 + 표 먼저
+    # 지도 + 표
     map_col, table_col = st.columns([5, 4], gap="large")
 
     with map_col:
-        st.markdown('<div class="section-title">📍 지역별 등록 현황 지도</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="section-title">📍 {selected_year} 지역별 등록 현황 지도</div>', unsafe_allow_html=True)
 
         m = folium.Map(location=[37.5665, 126.9780], zoom_start=11, tiles="CartoDB Positron")
 
-        district_totals = (
-            filtered.groupby(["시군구명", "위도", "경도"])["등록대수"]
-            .sum().reset_index()
-        )
+        district_totals = filtered.groupby(["시군구명", "위도", "경도"])["등록대수"].sum().reset_index()
         max_count = district_totals["등록대수"].max() if len(district_totals) > 0 else 1
 
         for _, row in district_totals.iterrows():
@@ -300,7 +312,6 @@ elif st.session_state.page == "📊 현황 대시보드":
                 tooltip=f"{row['시군구명']}: {int(count):,}대",
             ).add_to(m)
 
-            # [수정 1] 항상 보이는 지역명 + 등록대수 라벨
             label_html = (
                 f"<div style='"
                 f"background:rgba(255,255,255,0.92);"
@@ -322,54 +333,46 @@ elif st.session_state.page == "📊 현황 대시보드":
 
         st_folium(m, width=None, height=500, use_container_width=True)
 
-    ######    
-
     with table_col:
-        st.markdown('<div class="section-title">📊 자치구별 등록 현황 (막대 그래프)</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="section-title">📊 자치구별 현황 (막대 그래프)</div>', unsafe_allow_html=True)
 
-        # 1. 데이터 가공: 시군구별 합계만 추출하여 내림차순 정렬
         chart_data = filtered.groupby("시군구명")["등록대수"].sum().sort_values(ascending=False).reset_index()
+        st.bar_chart(chart_data, x="시군구명", y="등록대수", color="#2563eb", use_container_width=True, height=250)
 
-        # 2. 막대 그래프 출력 (지역명 & 합계만 표시)
-        st.bar_chart(
-            chart_data, 
-            x="시군구명", 
-            y="등록대수", 
-            color="#2563eb", 
-            use_container_width=True,
-            height=480
-        )
+        # [수정됨] 연료별 피벗 테이블 추가
+        st.markdown('<div class="section-title" style="margin-top:20px;">📋 친환경 연료별 상세 표</div>', unsafe_allow_html=True)
+        if not filtered.empty:
+            pivot = filtered.groupby(["시군구명", "연료명"])["등록대수"].sum().unstack(fill_value=0)
+            pivot["합계"] = pivot.sum(axis=1)
+            pivot = pivot.sort_values("합계", ascending=False)
+            pivot.index.name = "시군구명"
 
-        # 3. 하단 요약 정보
-        st.markdown(f"""
-        <div style="margin-top:12px;padding:14px 18px;background:#f8fafc;
-                    border:1px solid #e2e8f0;border-radius:12px;font-size:13px;text-align:center;">
-            <span style="color:#64748b">표시 구역:</span> <b>{len(chart_data)}개</b>
-            <span style="margin:0 10px;color:#cbd5e1;">|</span>
-            <span style="color:#64748b">총 등록대수:</span>
-            <b style="color:#2563eb; font-size:15px;">{int(chart_data['등록대수'].sum()):,}대</b>
-        </div>
-        """, unsafe_allow_html=True)
+            styled = pivot.style.format("{:,.0f}").background_gradient(subset=["합계"], cmap="Blues").set_properties(**{'font-size': '13px'})
+            st.dataframe(styled, use_container_width=True, height=200)
 
-   # [수정 2] KPI 카드 — 지도·표 아래
+    # KPI 카드
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<div class="section-title">📈 주요 지표</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">📈 {selected_year} 주요 지표</div>', unsafe_allow_html=True)
 
-    total        = df["등록대수"].sum()
-    top_district = df.groupby("시군구명")["등록대수"].sum().idxmax()
-    top_count    = df.groupby("시군구명")["등록대수"].sum().max()
-    avg          = int(df.groupby("시군구명")["등록대수"].sum().mean())
+    # 'filtered' 데이터프레임에는 이미 선택된 년도 데이터만 존재함!
+    total        = filtered["등록대수"].sum()
+    top_district = filtered.groupby("시군구명")["등록대수"].sum().idxmax() if not filtered.empty else "-"
+    top_count    = filtered.groupby("시군구명")["등록대수"].sum().max() if not filtered.empty else 0
+    avg          = int(filtered.groupby("시군구명")["등록대수"].sum().mean()) if not filtered.empty else 0
     
-    # 데이터셋에 승용 데이터가 없으므로 가장 최신 년도 등록 비중으로 대체
-    latest_year_label = sorted(df["차량종류"].unique())[-1]
-    latest_year_total = df[df["차량종류"] == latest_year_label]["등록대수"].sum()
-    ratio = int((latest_year_total / total) * 100) if total > 0 else 0
+    # 전기차 비중 계산 (연료명에 '전기'가 포함된 경우)
+    ev_total     = filtered[filtered["연료명"].str.contains("전기", na=False)]["등록대수"].sum()
+    ratio        = int((ev_total / total) * 100) if total > 0 else 0
 
     k1, k2, k3, k4 = st.columns(4)
-    with k1: st.markdown(f'<div class="kpi-card"><div class="kpi-label">전체 전기차 등록</div><div class="kpi-value">{total:,}</div><div class="kpi-sub">서울특별시 전체</div></div>', unsafe_allow_html=True)
-    with k2: st.markdown(f'<div class="kpi-card"><div class="kpi-label">최다 등록 자치구</div><div class="kpi-value">{top_district}</div><div class="kpi-sub">{top_count:,}대</div></div>', unsafe_allow_html=True)
-    with k3: st.markdown(f'<div class="kpi-card"><div class="kpi-label">자치구 평균</div><div class="kpi-value">{avg:,}</div><div class="kpi-sub">25개 자치구 기준</div></div>', unsafe_allow_html=True)
-    with k4: st.markdown(f'<div class="kpi-card"><div class="kpi-label">{latest_year_label} 비중</div><div class="kpi-value">{ratio}%</div><div class="kpi-sub">{latest_year_total:,}대 신규등록</div></div>', unsafe_allow_html=True)
+    with k1:
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">전체 등록대수</div><div class="kpi-value">{total:,}</div><div class="kpi-sub">선택 년도 누적기준</div></div>', unsafe_allow_html=True)
+    with k2:
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">최다 등록 자치구</div><div class="kpi-value">{top_district}</div><div class="kpi-sub">{top_count:,}대</div></div>', unsafe_allow_html=True)
+    with k3:
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">자치구 평균</div><div class="kpi-value">{avg:,}</div><div class="kpi-sub">25개 자치구 기준</div></div>', unsafe_allow_html=True)
+    with k4:
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">순수 전기차(EV) 비중</div><div class="kpi-value">{ratio}%</div><div class="kpi-sub">친환경차 중 전기차 비율</div></div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -410,53 +413,75 @@ elif st.session_state.page == "📊 현황 대시보드":
 # PAGE 3 : 충전소 맵
 # ─────────────────────────────────────────────────────────────────────────────
 elif st.session_state.page == "📍 충전소 맵":
-    import folium
-    from folium.plugins import MarkerCluster
-    from streamlit_folium import st_folium
 
     st.markdown('<div class="page-content">', unsafe_allow_html=True)
     st.markdown("<h3 style='color:#1e293b;font-weight:800;margin-bottom:20px;'>📍 EV Seoul 충전소 인프라 현황</h3>", unsafe_allow_html=True)
+    
+    # district_code -> 지역명 매핑
+    df_charge_map = df_charge.merge(
+        district_df[["district_code", "district_name"]],
+        on="district_code",
+        how="left"
+    )
 
     f1, f2, f3 = st.columns([3, 3, 2])
     with f1:
-        all_districts = ["전체"] + sorted(df_charge["시군구명"].unique().tolist())
+        all_districts = ["전체"] + sorted(df_charge_map["district_name"].dropna().unique().tolist())
         sel_dist = st.selectbox("자치구 선택", all_districts, key="charge_dist")
     with f2:
-        charge_types = ["전체"] + sorted(df_charge["충전기종류"].unique().tolist())
+        charge_types = ["전체", "급속", "완속"]
         sel_type = st.selectbox("충전기 종류", charge_types, key="charge_type")
     with f3:
-        filtered_c = df_charge.copy()
+        filtered_c = df_charge_map.copy()
         if sel_dist != "전체":
-            filtered_c = filtered_c[filtered_c["시군구명"] == sel_dist]
-        if sel_type != "전체":
-            filtered_c = filtered_c[filtered_c["충전기종류"] == sel_type]
+            filtered_c = filtered_c[filtered_c["district_name"] == sel_dist]
+        if sel_type == "급속":
+            filtered_c = filtered_c[filtered_c["fast_charger"] > 0]
+        elif sel_type == "완속":
+            filtered_c = filtered_c[filtered_c["slow_charger"] > 0]
+        filtered_c = filtered_c.dropna(subset=["lat", "lon"])
         st.metric("조회된 충전소", f"{len(filtered_c):,}개")
-
+        
+        
     st.markdown("<br>", unsafe_allow_html=True)
     map_col2, info_col = st.columns([6, 3], gap="large")
 
     with map_col2:
         center_lat, center_lon, zoom = 37.5665, 126.9780, 11
         if sel_dist != "전체" and len(filtered_c) > 0:
-            center_lat = filtered_c["위도"].mean()
-            center_lon = filtered_c["경도"].mean()
+            center_lat = filtered_c["lat"].mean()
+            center_lon = filtered_c["lon"].mean()
             zoom = 13
 
         m2 = folium.Map(location=[center_lat, center_lon], zoom_start=zoom, tiles="CartoDB Positron")
         cluster = MarkerCluster(options={"maxClusterRadius": 50, "spiderfyOnMaxZoom": True}).add_to(m2)
 
-        color_map = {"급속": "#3b82f6", "완속": "#10b981", "초급속": "#f59e0b"}
         for _, row in filtered_c.iterrows():
-            color = color_map.get(row["충전기종류"], "#fb0473")
+            if sel_type == "급속":
+                color = "#3b82f6"
+            elif sel_type == "완속":
+                color = "#10b981"
+            else:
+                if row["fast_charger"] > 0 and row["slow_charger"] > 0:
+                    color = "#8b5cf6"
+                elif row["fast_charger"] > 0:
+                    color = "#3b82f6"
+                elif row["slow_charger"] > 0:
+                    color = "#10b981"
+                else:
+                    color = "#94a3b8"
+
             folium.CircleMarker(
-                location=[row["위도"], row["경도"]],
+                location=[row["lat"], row["lon"]],
                 radius=6, color=color, weight=1,
                 fill=True, fill_color=color, fill_opacity=0.9,
-                tooltip=row["설치장소명"],
+                tooltip=row["station_name"],
                 popup=folium.Popup(
-                    f"<div style='font-family:Noto Sans KR;'><b>{row['설치장소명']}</b><br>"
-                    f"<span style='color:#64748b;font-size:12px;'>{row['주소']}</span><br><br>"
-                    f"<b>종류:</b> {row['충전기종류']}<br><b>운영:</b> {row['운영시간']}</div>",
+                    f"<div style='font-family:Noto Sans KR;'><b>{row['station_name']}</b><br>"
+                    f"<span style='color:#64748b;font-size:12px;'>{row['address']}</span><br><br>"
+                    f"<b>자치구:</b> {row['district_name']}<br>"
+                    f"<b>급속:</b> {int(row['fast_charger'])}대<br>"
+                    f"<b>완속:</b> {int(row['slow_charger'])}대</div>",
                     max_width=250
                 )
             ).add_to(cluster)
@@ -466,10 +491,10 @@ elif st.session_state.page == "📍 충전소 맵":
                     background:rgba(255,255,255,0.95);border:1px solid #e2e8f0;
                     box-shadow:0 4px 6px rgba(0,0,0,0.05);border-radius:12px;
                     padding:14px 18px;font-size:13px;color:#1e293b;">
-          <b style="font-size:14px;display:block;margin-bottom:8px;">충전기 종류</b>
-          <span style="color:#3b82f6;font-size:16px;">●</span> 급속 &nbsp;&nbsp;
-          <span style="color:#10b981;font-size:16px;">●</span> 완속 &nbsp;&nbsp;
-          <span style="color:#f59e0b;font-size:16px;">●</span> 초급속
+          <b style="font-size:14px;display:block;margin-bottom:8px;">충전기 유형</b>
+          <span style="color:#3b82f6;font-size:16px;">●</span> 급속 보유 &nbsp;&nbsp;
+          <span style="color:#10b981;font-size:16px;">●</span> 완속 보유 &nbsp;&nbsp;
+          <span style="color:#8b5cf6;font-size:16px;">●</span> 급속+완속
         </div>
         """
         m2.get_root().html.add_child(folium.Element(legend_html))
@@ -478,10 +503,12 @@ elif st.session_state.page == "📍 충전소 맵":
     with info_col:
         st.markdown('<div class="section-title">📋 시설 요약</div>', unsafe_allow_html=True)
         if len(filtered_c) > 0:
-            for t, cnt in filtered_c["충전기종류"].value_counts().items():
-                color    = {"급속": "#3b82f6", "완속": "#10b981", "초급속": "#f59e0b"}.get(t, "#94a3b8")
-                bg_c     = {"급속": "#eff6ff",  "완속": "#ecfdf5",  "초급속": "#fffbeb"}.get(t, "#f8fafc")
-                bdr_c    = {"급속": "#bfdbfe",  "완속": "#a7f3d0",  "초급속": "#fde68a"}.get(t, "#e2e8f0")
+            summary_data = [
+                ("급속", int(filtered_c["fast_charger"].sum()), "#3b82f6", "#eff6ff", "#bfdbfe"),
+                ("완속", int(filtered_c["slow_charger"].sum()), "#10b981", "#ecfdf5", "#a7f3d0"),
+            ]
+
+            for t, cnt, color, bg_c, bdr_c in summary_data:
                 st.markdown(f"""
                 <div style="display:flex;justify-content:space-between;align-items:center;
                             padding:12px 18px;background:{bg_c};border:1px solid {bdr_c};
@@ -495,11 +522,11 @@ elif st.session_state.page == "📍 충전소 맵":
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div class="section-title">상세 리스트</div>', unsafe_allow_html=True)
-        display_df = filtered_c[["설치장소명", "충전기종류", "운영시간"]].reset_index(drop=True)
-        display_df.columns = ["장소명", "종류", "운영시간"]
+        display_df = filtered_c[["station_name", "district_name", "fast_charger", "slow_charger"]].reset_index(drop=True)
+        display_df.columns = ["장소명", "자치구", "급속", "완속"]
         st.dataframe(display_df.head(50), use_container_width=True, height=300)
         if len(filtered_c) > 50:
-            st.caption(f"*상위 50개소 표시 (검색결과: 총 {len(filtered_c):,}개)")
+            st.caption(f"*상위 50개소 표시 (검색결과: 총 {len(filtered_c):,}개소)")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -510,7 +537,7 @@ elif st.session_state.page == "📍 충전소 맵":
 elif st.session_state.page == "💬 FAQ":
     st.markdown('<div class="page-content">', unsafe_allow_html=True)
     st.markdown("<h3 style='color:#1e293b;font-weight:800;margin-bottom:20px;'>💬 EV Seoul 자주 묻는 질문(FAQ)</h3>", unsafe_allow_html=True)
-
+    
     search_col, cat_col = st.columns([4, 2])
     with search_col:
         search_query = st.text_input(

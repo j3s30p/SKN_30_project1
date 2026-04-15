@@ -33,16 +33,15 @@ def get_ev_data():
     df = df_year.merge(df_dist, on="district_code", how="left")
     df = df.merge(df_fuel, on="fuel_id", how="left")
 
-    # 전기차(친환경) 데이터만 필터링
+    # 친환경 데이터만 필터링
     df_ev = df[df['fuel_name'].str.contains('전기', na=False)].copy()
 
-    # 원본 데이터에 '차량종류(승용/화물)'가 없으므로 UI 필터 호환을 위해 등록년도(reg_year)를 차량종류 컬럼에 매핑 
-    # (이렇게 하면 앱에서 승용/화물 대신 "2023년", "2024년" 등으로 필터링 가능해집니다)
-    df_ev['차량종류'] = df_ev['reg_year'].astype(str) + "년 등록"
+    # [핵심 수정] 구별, 년도별, 연료명별로 합계 산출
+    grouped = df_ev.groupby(['district_name', 'reg_year', 'fuel_name'])['total_amount'].sum().reset_index()
+    grouped.rename(columns={'district_name': '시군구명', 'reg_year': '기준년도', 'fuel_name': '연료명', 'total_amount': '등록대수'}, inplace=True)
 
-    # 구별, 년도별 합계 산출
-    grouped = df_ev.groupby(['district_name', '차량종류'])['total_amount'].sum().reset_index()
-    grouped.rename(columns={'district_name': '시군구명', 'total_amount': '등록대수'}, inplace=True)
+    # 년도 뒤에 '년' 글자 붙이기
+    grouped['기준년도'] = grouped['기준년도'].astype(str) + "년"
 
     # 좌표 매핑
     grouped['위도'] = grouped['시군구명'].map(lambda x: DISTRICT_COORDS.get(x, (37.5665, 126.9780))[0])
@@ -50,36 +49,22 @@ def get_ev_data():
 
     return grouped
 
-def get_charging_station_data():
-    """2. 충전소 데이터 병합 및 가공"""
-    df_stat = pd.read_csv(get_data_path("data_set_ev_charging_stations.csv"))
-    df_dist = pd.read_csv(get_data_path("data_set_seoul_districts.csv"))
 
-    # 테이블 병합
-    df = df_stat.merge(df_dist, on="district_code", how="left")
+def get_charging_station_data(csv_path="data/data_set_ev_charging_stations_new.csv"):
+    df = pd.read_csv(csv_path)
 
-    # 급속/완속 여부 결정 로직 (급속 충전기가 1개라도 있으면 '급속'으로 분류)
-    df['충전기종류'] = df.apply(lambda row: "급속" if row['fast_charger'] > 0 else "완속", axis=1)
-
-    # UI 컬럼명에 맞게 변경
-    df.rename(columns={
-        'district_name': '시군구명',
-        'station_name': '설치장소명',
-        'address': '주소'
-    }, inplace=True)
-
-    df['운영시간'] = "정보 없음" # CSV에 운영시간이 없으므로 기본값 처리
-
-    # 충전소 데이터에 위도/경도가 없으므로, 자치구 중심 좌표를 기준으로 약간씩 분산(Scatter)시킴
-    np.random.seed(42)
-    lat_list, lon_list = [], []
-    for dist in df['시군구명']:
-        base_lat, base_lon = DISTRICT_COORDS.get(dist, (37.5665, 126.9780))
-        lat_list.append(base_lat + np.random.uniform(-0.025, 0.025))
-        lon_list.append(base_lon + np.random.uniform(-0.025, 0.025))
-    
-    df['위도'] = lat_list
-    df['경도'] = lon_list
+    df = df[
+        [
+            "station_id",
+            "station_name",
+            "address",
+            "lat",
+            "lon",
+            "fast_charger",
+            "slow_charger",
+            "district_code",
+        ]
+    ]
 
     return df
 
@@ -118,18 +103,18 @@ def get_load_faq_data():
 
 # ── 하단의 차트를 위한 헬퍼 함수 ──────────────────────────────
 def get_ev_trend_data():
-    """년도별 전기차 추이 (app.py 라인차트용)"""
+    """년도별 전기차 추이 (라인차트용)"""
     df_year = pd.read_csv(get_data_path("year_amount.csv"))
     df_fuel = pd.read_csv(get_data_path("data_set_fuel_types.csv"))
     df = df_year.merge(df_fuel, on="fuel_id", how="left")
     
-    df_ev = df[df['fuel_name'].str.contains('전기', na=False) | (df['is_eco'].isin([1, '1', True, 'True']))]
+    df_ev = df[df['fuel_name'].str.contains('전기', na=False)]
     trend = df_ev.groupby('reg_year')['total_amount'].sum().reset_index()
     trend.rename(columns={'reg_year': '기준년도', 'total_amount': '등록대수'}, inplace=True)
     return trend
 
 def get_ev_fuel_data():
-    """연료별 등록 비중 (app.py 도넛차트용)"""
+    """연료별 등록 비중 (도넛차트용)"""
     #df_year = pd.read_csv(get_data_path("year_amount.csv"))
     #df_fuel = pd.read_csv(get_data_path("data_set_fuel_types.csv"))
     #df = df_year.merge(df_fuel, on="fuel_id", how="left")
@@ -137,7 +122,7 @@ def get_ev_fuel_data():
     #fuel = df.groupby('fuel_name')['total_amount'].sum().reset_index()
     #fuel.rename(columns={'fuel_name': '연료', 'total_amount': '수량'}, inplace=True)
     #return fuel
-    fuel_data = pd.read_csv("data\year_amount.csv")
+    fuel_data = pd.read_csv(get_data_path("year_amount.csv"))
 
     df_2026 = fuel_data[fuel_data['reg_year'] == 2026]
 
