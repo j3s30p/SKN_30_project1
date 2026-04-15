@@ -38,6 +38,7 @@ html, body, [class*="css"] {
     max-width: 1280px !important;
     margin: 0 auto !important;
 }
+            
 
 .kpi-card {
     background: var(--surface);
@@ -80,8 +81,37 @@ html, body, [class*="css"] {
 .faq-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 100px; margin-right: 6px; margin-top: 12px; }
 .tag-ev     { background: #ecfdf5; color: var(--green); border: 1px solid #a7f3d0; }
 .tag-charge { background: #fffbeb; color: var(--yellow); border: 1px solid #fde68a; }
+/* 멀티셀렉트 선택된 태그(칩) 모던하게 변경 */
+[data-baseweb="tag"] {
+    background-color: #eff6ff !important; /* 연한 블루 배경 */
+    border: 1px solid #bfdbfe !important; /* 부드러운 테두리 */
+    border-radius: 20px !important; /* 알약 모양으로 완전 둥글게 */
+    padding: 2px 8px !important;
+    margin-right: 4px !important;
+}
+
+/* 태그 안쪽 텍스트 스타일 */    /* 윤태선 수정 */
+[data-baseweb="tag"] span {
+    color: #1d4ed8 !important; /* 진하고 신뢰감 있는 블루 텍스트 */
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    font-family: 'Noto Sans KR', sans-serif !important;
+}
+
+/* 태그 지우기 'X' 버튼 스타일 */
+[data-baseweb="tag"] svg {
+    color: #60a5fa !important; /* 아이콘 기본 색상 */
+    transition: color 0.2s;
+}
+
+/* 'X' 버튼에 마우스 올렸을 때 */
+[data-baseweb="tag"] svg:hover {
+    color: #1e3a8a !important; /* 더 진한 파란색으로 변경 */
+}
 </style>
 """, unsafe_allow_html=True)
+
+
 
 if "page" not in st.session_state:
     st.session_state.page = "현황"
@@ -271,7 +301,7 @@ elif st.session_state.page == "충전소 맵":
             filtered_c = filtered_c[filtered_c["시군구명"] == sel_dist]
         if sel_type != "전체":
             filtered_c = filtered_c[filtered_c["충전기종류"] == sel_type]
-        st.metric("조회된 충전소", f"{len(filtered_c):,}개소")
+        st.metric("조회된 충전소", f"{len(filtered_c):,}개")
 
     st.markdown("<br>", unsafe_allow_html=True)
     map_col2, info_col = st.columns([6, 3], gap="large")
