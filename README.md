@@ -16,12 +16,10 @@
 ## 1. Team Route 👥
 ### 누가 무엇을 했는지 구조화
 
-<p align="center">
-  &lt;img필요&gt;
 </p>
 
 | 이름 | 역할 | 담당 분석 및 업무 |
-| :-----: | :-----: | :----- |
+| :----- | :----- | :----- |
 | **박제섭** | **PM** | 기획 / FAQ 데이터 수집·전처리 / 텍스트 분석 / 위치 데이터 가공 |
 | **박지유** | **Data Engineering** | 데이터 수집 및 전처리 / 충전소 등록 데이터 가공 / DB 모델링 및 아키텍처 설계 / DB 구축 및 운영 관리 / 회의록 관리 |
 | **박세빈** | **Data Engineering** | 데이터 수집 및 전처리 / 자동차 등록 데이터 가공 / DB 모델링 및 아키텍처 설계 / DB 구축 및 운영 관리 |
@@ -37,7 +35,7 @@
 ## 2. Visualization Preview 🖼️
 
 
-&lt;img필요&gt;
+<img src="./assets/preview.png" width="80%">
 
 <br>
 
@@ -86,7 +84,8 @@ SKN30_project1_team2/
 ├── Streamlit_main.py
 ├── uv.lock
 ├── assets/
-│   └── ERD.png
+│   ├── ERD.png
+│   └── preview.png
 ├── crawling/
 │   ├── crawling_nuri.py
 │   ├── crawling_seoul.py
@@ -161,8 +160,9 @@ SKN30_project1_team2/
 
 <div align="center">
 
-#### 💻 Language & Data
-Python 3.13, CSS, Pandas, kiwipiepy
+#### 💻 Language & DATA
+Python 3.13, CSS
+pandas, selenium
 
 <br>
 
@@ -172,12 +172,12 @@ MySQL 8.0
 <br>
 
 #### 📊 Visualization & App
-Streamlit, Altair, Plotly, Streamlit native charts, Folium + MarkerCluster
+Streamlit, Plotly, Folium
 
 <br>
 
 #### ⚙️ Tools
-Selenium, Git, GitHub, DBeaver, MySQL Workbench 8.0, VSCode
+Git, DBeaver, MySQL Workbench 8.0, VSCode
 
 </div>
 
@@ -214,4 +214,3 @@ python -m streamlit run Streamlit_main.py
 * [EV 충전소에 대한 상위 10개 FAQ](https://sinoevse.com/ko/top-10-faqs-about-ev-charging-stations/)
 * [그린카 보급(자주 묻는 질문)](https://news.seoul.go.kr/env/archives/517115#sns_elem_dropdownmenu)
 * [무공해차 통합누리집 FAQ](https://ev.or.kr/nportal/partcptn/initFaqAction.do#)
-* **SK Networks Family AI Camp 30기 1차 프로젝트 (2팀)**
