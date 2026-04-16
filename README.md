@@ -37,11 +37,11 @@
 
 <img src="./assets/preview.png" width="80%">
 <br>
-![page2](./assets/page2.gif)
+<img src="./assets/page2.gif" width="80%">
 <br>
-![page3](./assets/page3.gif)
+<img src="./assets/page3.gif" width="80%">
 <br>
-![page4](./assets/page4.gif)
+<img src="./assets/page4.gif" width="80%">
 
 
 
