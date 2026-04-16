@@ -93,6 +93,9 @@ SKN30_project1_team2/
 ├── uv.lock
 ├── assets/
 │   ├── ERD.png
+│   ├── page2.gif
+│   ├── page3.gif
+│   ├── page4.gif
 │   └── preview.png
 ├── crawling/
 │   ├── crawling_nuri.py
