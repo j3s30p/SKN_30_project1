@@ -35,7 +35,7 @@
 ## 2. Visualization Preview 🖼️
 
 
-<img src="./assets/preview.png" width="80%">
+<img src="./assets/preview.png" width="50%">
 <br>
 <img src="./assets/page2.gif" width="50%">
 <br>
