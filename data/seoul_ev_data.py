@@ -74,7 +74,7 @@ def get_charging_station_data(csv_path="data/data_set_ev_charging_stations_new.c
 def get_load_faq_data():
     """FAQ 데이터 로드 - data_set_faq.csv 단일 파일"""
     try:
-        df = pd.read_csv(get_data_path("data_faq/data_set_faq.csv"))
+        df = pd.read_csv(get_data_path("data_set_faq.csv"))
     except Exception as e:
         st.warning(f"FAQ 데이터를 불러오지 못했습니다: {e}")
         return []

@@ -190,7 +190,7 @@ def load_faq_data():
 df        = load_data()
 df_charge = load_charging()
 district_df = pd.read_csv("data/data_set_seoul_districts.csv")
-keywords_top5 = top_rate("data/data_faq/data_set_faq.csv").most_common(5)
+keywords_top5 = top_rate("data/data_set_faq.csv").most_common(5)
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE 1 : INFO (메인 소개 화면)
 # ─────────────────────────────────────────────────────────────────────────────
