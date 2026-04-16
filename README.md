@@ -90,7 +90,6 @@ SKN30_project1_team2/
 │   ├── crawling_nuri.py
 │   ├── crawling_seoul.py
 │   ├── crawling_sino.py
-│   ├── README.md
 │   ├── pyproject.toml
 │   ├── uv.lock
 │   └── csv/
