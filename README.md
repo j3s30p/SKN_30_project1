@@ -36,6 +36,14 @@
 
 
 <img src="./assets/preview.png" width="80%">
+<br>
+![page2](./assets/page2.gif)
+<br>
+![page3](./assets/page3.gif)
+<br>
+![page4](./assets/page4.gif)
+
+
 
 <br>
 
