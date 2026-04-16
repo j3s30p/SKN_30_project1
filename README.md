@@ -193,6 +193,10 @@ FAQ 데이터는 별도의 독립 테이블로 관리하여 사용자 검색 기
 
 <div align="center">
 
+<img src="./assets/workflow_img.png" width="80%">
+
+<br>
+
 #### 💻 Language & DATA
 Python 3.13, CSS
 pandas, selenium
