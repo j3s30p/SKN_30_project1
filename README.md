@@ -35,13 +35,13 @@
 ## 2. Visualization Preview 🖼️
 
 
-<img src="./assets/preview.png" width="80%">
+<img src="./assets/preview.png" width="50%">
 <br>
-<img src="./assets/page2.gif" width="80%">
+<img src="./assets/page2.gif" width="50%">
 <br>
-<img src="./assets/page3.gif" width="80%">
+<img src="./assets/page3.gif" width="50%">
 <br>
-<img src="./assets/page4.gif" width="80%">
+<img src="./assets/page4.gif" width="50%">
 
 
 
@@ -196,25 +196,6 @@ FAQ 데이터는 별도의 독립 테이블로 관리하여 사용자 검색 기
 <img src="./assets/workflow_img.png" width="80%">
 
 <br>
-
-#### 💻 Language & DATA
-Python 3.13, CSS
-pandas, selenium
-
-<br>
-
-#### 🗄 Database
-MySQL 8.0
-
-<br>
-
-#### 📊 Visualization & App
-Streamlit, Plotly, Folium
-
-<br>
-
-#### ⚙️ Tools
-Git, DBeaver, MySQL Workbench 8.0, VSCode
 
 </div>
 
